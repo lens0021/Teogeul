@@ -7,7 +7,7 @@ teogeul의 한글 조합 엔진(`HangulEngine`)을
 
 ## 전체 구조
 
-```
+```text
 LayoutData.kt (자판 데이터, Kotlin에 유지)
       │  jamoTable/jamoSet/combination 를 그대로 FFI로 전달
       ▼
