@@ -40,27 +40,21 @@ teogeul 행 `[key, normal, shift]` (key = 비시프트 ASCII):
 - key 128 행(온점/반점 특수키)은 `KeyEventHandler`가 엔진 앞에서 직접
   처리하므로 변환하지 않는다.
 
-### jamoSet (상태 의존 자판: 신세벌식, 3-2015 계열)
+### jamoSet (상태 의존 자판: 신세벌식, 3-2015 계열) — 후속 이행
 
 teogeul의 상태는 "마지막 입력의 갈래"(0=없음, 1=초성, 2=중성, 3=종성)이고 상태별
-테이블 4개를 갖는다. geulbus 값-식 변수로 같은 정보를 유도한다:
+테이블 4개를 갖는다. T/F 값-식으로 대부분 표현되지만(0↔`T==0`, 1↔`T==1`,
+2↔`T==2&&F==0`, 3↔`T==2&&F>0`), **preserveState 플래그(0x10000)는 표현할 수
+없다**: 신세벌식에서 오른손 ㅗ/ㅜ(preserve, 예: p 키)는 다음 키를 중성으로 남겨
+겹모음을 만들고(과=ㄱ+p+f), 왼손 ㅗ(plain, v 키) 뒤의 같은 키는 갈마들이
+종성이다(곶=ㄱ+v+f). 같은 중성 ㅗ가 들어온 뒤라 T/E/F 로는 구분 불가.
 
-- `T` (0=비어있음, 1=초성/홑낱자만, 2=중성 있음) ≈ 상태 0/1 구분
-- `F` (조합 중 종성 서열, 없으면 0) ≈ 상태 2(중성 뒤, F==0)와 3(종성 뒤, F>0) 구분
-
-키별 식: `T==0 ? t0 : T==1 ? t1 : F ? t3 : t2` (tN = 테이블 N의 그 키 값,
-같으면 축약). 검증된 대응:
-
-| teogeul 상태 | 조건 | 예 (3-2015) |
-|---|---|---|
-| 0 (초기) | `T==0` | CHOJUNG |
-| 1 (초성 뒤) | `T==1` | CHOJUNG |
-| 2 (중성 뒤) | `T==2 && F==0` | CHOJONG_D (시프트=겹받침) |
-| 3 (종성 뒤) | `T==2 && F>0` | CHOJONG (시프트=갈마들이 중성) |
-
-알려진 극단 사례: 홑종성만 조합 중일 때(중성 없이 받침 먼저) teogeul은 상태
-3(CHOJONG), T 기반은 T==1(CHOJUNG)을 쓴다. 실사용에서 도달하기 어려운 상태라
-동작 차이를 허용한다 (major 업데이트).
+날개셋의 정석은 **가상 낱자 + 오토마타 상태**다: preserve 키가 가상 단위를
+내고, 오토마타가 가상 단위의 서열(A)로 상태를 유지하며, KeyTable 의 T 가
+오토마타 상태를 가리킨다. geulbus-core 가 이를 지원하려면 (a) AutomataTable 이
+있을 때 KeyTable 의 T 를 휴리스틱이 아닌 오토마타 상태로, (b) 오토마타 A 에
+가상 단위 식별을 유지, 두 가지 확장이 필요하다. 이 확장이 들어가기 전까지
+jamoSet 모드(신세벌식 3종, 3-2015 2종, P3)는 기존 HangulEngine 을 쓴다.
 
 ### 조합 테이블
 
@@ -80,16 +74,21 @@ teogeul의 상태는 "마지막 입력의 갈래"(0=없음, 1=초성, 2=중성, 
 
 teogeul은 0.3 출시 전까지 git 의존으로 참조한다.
 
-## Kotlin 쪽 변경
+## 이행 단계
 
-- `HangulEngine`, `HangulJamo`(엔진 내부용 상수) 제거. `LayoutData`는 유지.
-- `KeyEventHandler`: `inputCode`/`inputJamo` 2단 호출 대신 `press` 1회.
-  시프트 기호 역변환(SHIFT_CONVERT)은 "시프트 적용된 ASCII를 만든다"로 단순화.
-- 백스페이스: `engine.backspace()` → `KeyOutcome` 반영 (`delete_before`는
-  `deleteSurroundingText`).
-- 모아치기 설정 제거 (major): `hardware_use_moachigi`, `hardware_full_moachigi`,
-  `hardware_full_moachigi_delay`. geulbus의 순서 무관 조합이 대체한다.
-- 영문 대체배열(드보락/콜맥) 변환(`LayoutConverter`)은 엔진과 무관하므로 유지.
+**1단계 (완료)**: 단일 자모 테이블 자판을 geulbus 엔진으로.
+`EngineMode.useGeulbus` = 세벌식 390/391/단모음/순2014, 두벌식 표준/NK.
+`KeyEventHandler` 가 `press`/`backspace` 의 `KeyOutcome` 을 InputConnection 에
+반영하고, 나머지 모드는 기존 `HangulEngine` 경로를 그대로 쓴다.
+
+**2단계 (geulbus-core 확장 대기)**: jamoSet 6개 모드(위 참고),
+안마태(모아치기 = 오토마타 경로 필요), 네벌식 1969(0x02 플래그 의미 분석 필요).
+
+**3단계 (2단계 후)**: `HangulEngine`/`HangulJamo` 제거, 모아치기 시간 설정
+(`hardware_use_moachigi`, `hardware_full_moachigi`, `hardware_full_moachigi_delay`)
+과 타임아웃 기제 제거 (major). geulbus의 순서 무관 조합이 대체한다.
+
+영문 대체배열(드보락/콜맥) 변환(`LayoutConverter`)은 엔진과 무관하므로 유지.
 
 ## 검증
 

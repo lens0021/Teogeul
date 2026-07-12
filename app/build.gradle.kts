@@ -146,7 +146,7 @@ dependencies {
     implementation(libs.kotlin.stdlib)
     implementation(libs.coroutines.android)
     // UniFFI 바인딩의 FFI 런타임 (Android 는 aar, JVM 테스트는 jar).
-    implementation("${libs.jna.get()}@aar")
+    implementation("net.java.dev.jna:jna:${libs.versions.jna.get()}@aar")
     testImplementation(libs.jna)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

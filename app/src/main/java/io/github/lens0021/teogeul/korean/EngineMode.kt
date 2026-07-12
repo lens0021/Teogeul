@@ -152,6 +152,20 @@ enum class EngineMode(
 
     val prefValues: Array<out String> = prefValues
 
+    /**
+     * geulbus-core(Rust) 엔진으로 조합하는 모드. 단일 자모 테이블 자판이 대상이다.
+     * 상태 의존 자판(jamoSet 계열)과 모아치기(안마태), 특수 플래그를 쓰는
+     * 네벌식은 아직 기존 HangulEngine 을 쓴다 (docs/geulbus-migration.md).
+     */
+    val useGeulbus: Boolean
+        get() =
+            when (this) {
+                SEBUL_390, SEBUL_391, SEBUL_DANMOEUM, SEBUL_SUN_2014,
+                DUBULSIK, DUBULSIK_NK,
+                -> true
+                else -> false
+            }
+
     companion object {
         const val LANG_EN = LANG_EN_CODE
         const val LANG_KO = LANG_KO_CODE
