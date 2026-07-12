@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.rust.android)
 }
 
 android {
@@ -62,6 +63,70 @@ android {
         disable += setOf("MissingTranslation", "ObsoleteLintCustomCheck")
         error += setOf("MissingPrefix", "StringFormatInvalid")
     }
+
+    sourceSets {
+        getByName("main") {
+            // Rust(geulbus-core) 조합 엔진: cargoBuild 산출 .so 와 UniFFI 생성 바인딩.
+            jniLibs.srcDir(layout.buildDirectory.dir("rustJniLibs/android"))
+            kotlin.srcDir(layout.buildDirectory.dir("generated/uniffi/kotlin"))
+        }
+    }
+}
+
+cargo {
+    module = "../rust"
+    libname = "teogeul_engine"
+    targets = listOf("arm64", "arm", "x86_64", "x86")
+    profile = "release"
+    pythonCommand = "python3"
+}
+
+// 호스트용 빌드: UniFFI 바인딩 생성과 JVM 단위 테스트(Robolectric)가 쓴다.
+val cargoHostBuild =
+    tasks.register<Exec>("cargoHostBuild") {
+        workingDir = file("../rust")
+        commandLine("cargo", "build", "--lib")
+        inputs.files(fileTree("../rust/src"), file("../rust/Cargo.toml"), file("../rust/Cargo.lock"))
+        outputs.file("../rust/target/debug/libteogeul_engine.so")
+    }
+
+val generateUniffiBindings =
+    tasks.register<Exec>("generateUniffiBindings") {
+        dependsOn(cargoHostBuild)
+        workingDir = file("../rust")
+        val outDir = layout.buildDirectory.dir("generated/uniffi/kotlin")
+        commandLine(
+            "cargo",
+            "run",
+            "--bin",
+            "uniffi-bindgen",
+            "--",
+            "generate",
+            "--library",
+            "target/debug/libteogeul_engine.so",
+            "--language",
+            "kotlin",
+            "--no-format",
+            "--out-dir",
+            outDir.get().asFile.absolutePath,
+        )
+        inputs.files(fileTree("../rust/src"), file("../rust/uniffi.toml"))
+        outputs.dir(outDir)
+    }
+
+tasks.named("preBuild") {
+    dependsOn(generateUniffiBindings)
+}
+
+// cargoBuild(Android 타겟) 산출물이 jniLibs 병합보다 먼저 만들어지도록.
+tasks.matching { it.name.matches(Regex("merge.*JniLibFolders")) }.configureEach {
+    dependsOn(tasks.named("cargoBuild"))
+}
+
+// Robolectric(JVM) 테스트가 호스트 cdylib 를 로드할 수 있게 한다.
+tasks.withType<Test>().configureEach {
+    dependsOn(cargoHostBuild)
+    systemProperty("jna.library.path", file("../rust/target/debug").absolutePath)
 }
 
 repositories {
@@ -80,6 +145,9 @@ configurations.configureEach {
 dependencies {
     implementation(libs.kotlin.stdlib)
     implementation(libs.coroutines.android)
+    // UniFFI 바인딩의 FFI 런타임 (Android 는 aar, JVM 테스트는 jar).
+    implementation("${libs.jna.get()}@aar")
+    testImplementation(libs.jna)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
 

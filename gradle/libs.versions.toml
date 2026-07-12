@@ -15,6 +15,8 @@ hilt = "2.50"
 ksp = "1.9.22-1.0.17"
 javapoet = "1.13.0"
 robolectric = "4.12.2"
+rust-android = "0.9.6"
+jna = "5.14.0"
 
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
@@ -35,6 +37,7 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt"
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 javapoet = { module = "com.squareup:javapoet", version.ref = "javapoet" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -43,3 +46,4 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+rust-android = { id = "org.mozilla.rust-android-gradle.rust-android", version.ref = "rust-android" }
