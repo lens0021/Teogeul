@@ -9,6 +9,8 @@ plugins {
 android {
     namespace = "io.github.lens0021.teogeul"
     compileSdk = 34
+    // rust-android-gradle(cargo 크로스컴파일)이 요구. 명시하면 AGP 가 자동 설치한다.
+    ndkVersion = "27.2.12479018"
 
     defaultConfig {
         applicationId = "io.github.lens0021.teogeul"
