@@ -1,0 +1,27 @@
+[package]
+name = "teogeul-engine"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "teogeul 의 한글 조합 엔진: geulbus-core 를 감싸는 UniFFI 래퍼"
+publish = false
+
+[lib]
+name = "teogeul_engine"
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+
+[dependencies]
+# geulbus-core 0.3 출시 전까지 main 을 rev 로 핀 고정 참조한다.
+# 두벌식/D·E·F 지원 머지: https://github.com/chaotic-ground/geulbus/pull/3
+geulbus-core = { git = "https://github.com/chaotic-ground/geulbus.git", rev = "544af55e5509a1120c495e68dffcf1c0770f5b90" }
+hanmo = "0.1"
+thiserror = "2"
+uniffi = { version = "0.32", features = ["cli"] }
+
+[profile.release]
+lto = true
+strip = "debuginfo"

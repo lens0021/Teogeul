@@ -1,0 +1,3 @@
+/target
+# 루트 .gitignore 의 bin/ 규칙에서 cargo 바이너리 소스는 제외한다.
+!src/bin/

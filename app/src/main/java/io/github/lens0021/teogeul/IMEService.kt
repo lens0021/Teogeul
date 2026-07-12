@@ -13,6 +13,7 @@ import io.github.lens0021.teogeul.config.SettingsRepository
 import io.github.lens0021.teogeul.config.SettingsSnapshot
 import io.github.lens0021.teogeul.config.SettingsValues
 import io.github.lens0021.teogeul.config.settingsDataStore
+import io.github.lens0021.teogeul.engine.GeulbusEngine
 import io.github.lens0021.teogeul.input.CommitComposingTextEvent
 import io.github.lens0021.teogeul.input.InputEventBus
 import io.github.lens0021.teogeul.input.InputKeyEvent
@@ -21,6 +22,7 @@ import io.github.lens0021.teogeul.input.KeyEventHandler
 import io.github.lens0021.teogeul.input.KeyUpEvent
 import io.github.lens0021.teogeul.input.LayoutConverter
 import io.github.lens0021.teogeul.korean.EngineMode
+import io.github.lens0021.teogeul.korean.GeulbusHangul
 import io.github.lens0021.teogeul.korean.HangulEngine
 import io.github.lens0021.teogeul.korean.HangulEngine.FinishComposingEvent
 import io.github.lens0021.teogeul.korean.HangulEngine.HangulEngineEvent
@@ -54,6 +56,10 @@ class IMEService() :
 
     var hangulEngine: HangulEngine = HangulEngine()
 
+    // geulbus-core(Rust) 엔진. useGeulbus 모드에서만 non-null 이며, 이때
+    // hangulEngine 은 쓰이지 않는다 (docs/geulbus-migration.md).
+    var geulbusEngine: GeulbusEngine? = null
+
     lateinit var currentEngineMode: EngineMode
     var currentLanguage: Int = EngineMode.LANG_KO
 
@@ -79,6 +85,7 @@ class IMEService() :
             layoutConverter = layoutConverter,
             inputConnectionProvider = { inputConnection },
             hangulEngineProvider = { hangulEngine },
+            geulbusEngineProvider = { geulbusEngine },
             directInputModeProvider = { directInputMode },
             alphabetLayoutProvider = { alphabetLayout },
             hardLangKeyProvider = { hardwareLangKey },
@@ -231,6 +238,7 @@ class IMEService() :
             directInputMode = true
             timeoutEnabled = false
             fullMoachigiEnabled = false
+            geulbusEngine = null
             hangulEngine.jamoTable = null
             hangulEngine.setCombinationTable(null)
             return
@@ -240,6 +248,15 @@ class IMEService() :
         directInputMode = prop.direct
         timeoutEnabled = prop.timeout
         fullMoachigiEnabled = prop.fullMoachigi
+
+        if (mode.useGeulbus) {
+            geulbusEngine = GeulbusHangul.create(mode)
+            hangulEngine.jamoTable = null
+            hangulEngine.setCombinationTable(null)
+            return
+        }
+
+        geulbusEngine = null
         if (mode.jamoset != null) {
             hangulEngine.jamoSet = mode.jamoset
         } else {
@@ -255,6 +272,10 @@ class IMEService() :
     }
 
     private fun resetCharComposition() {
+        geulbusEngine?.let {
+            it.reset()
+            inputConnection?.finishComposingText()
+        }
         hangulEngine.resetComposition()
     }
 

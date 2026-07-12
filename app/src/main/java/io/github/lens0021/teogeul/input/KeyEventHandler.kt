@@ -3,6 +3,8 @@ package io.github.lens0021.teogeul.input
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
+import io.github.lens0021.teogeul.engine.GeulbusEngine
+import io.github.lens0021.teogeul.engine.KeyOutcome
 import io.github.lens0021.teogeul.korean.EngineMode
 import io.github.lens0021.teogeul.korean.HangulEngine
 import io.github.lens0021.teogeul.model.KeyMappings
@@ -13,6 +15,7 @@ class KeyEventHandler(
     private val layoutConverter: LayoutConverter,
     private val inputConnectionProvider: () -> InputConnection?,
     private val hangulEngineProvider: () -> HangulEngine,
+    private val geulbusEngineProvider: () -> GeulbusEngine? = { null },
     private val directInputModeProvider: () -> Boolean,
     private val alphabetLayoutProvider: () -> String,
     private val hardLangKeyProvider: () -> KeyStroke?, // deprecated, kept for compatibility
@@ -151,6 +154,19 @@ class KeyEventHandler(
             inputConnection.commitText(" ", 1)
             return true
         } else if (key == KeyEvent.KEYCODE_DEL) {
+            val geulbus = geulbusEngineProvider()
+            if (geulbus != null) {
+                val out = geulbus.backspace()
+                if (!out.consumed) {
+                    inputConnection.deleteSurroundingText(1, 0)
+                } else {
+                    if (out.deleteBefore > 0u) {
+                        inputConnection.deleteSurroundingText(out.deleteBefore.toInt(), 0)
+                    }
+                    inputConnection.setComposingText(out.preedit, 1)
+                }
+                return true
+            }
             if (!hangulEngine.backspace()) {
                 resetCharComposition()
                 inputConnection.deleteSurroundingText(1, 0)
@@ -212,6 +228,13 @@ class KeyEventHandler(
             return
         }
 
+        val geulbus = geulbusEngineProvider()
+        if (geulbus != null) {
+            val out = geulbus.press(mutableCode.lowercaseChar().code.toUInt(), shift > 0)
+            applyOutcome(out, originalCode, shift > 0)
+            return
+        }
+
         val hangulEngine = hangulEngineProvider()
         val inputCode = hangulEngine.inputCode(mutableCode.lowercaseChar().code, shift)
         if (inputCode != -1) {
@@ -232,6 +255,33 @@ class KeyEventHandler(
             inputConnection?.commitText(String(charArrayOf(mutableCode)), 1)
             resetCharComposition()
         }
+    }
+
+    /** geulbus 엔진의 처리 결과를 InputConnection 에 반영한다. */
+    private fun applyOutcome(
+        out: KeyOutcome,
+        originalCode: Char,
+        shift: Boolean,
+    ) {
+        val inputConnection = inputConnectionProvider() ?: return
+        if (!out.consumed) {
+            // 배열에 없는 글쇠: 원래 문자를 그대로 입력한다.
+            var ch = originalCode
+            if (shift) {
+                ch = ch.uppercaseChar()
+                for (item in SHIFT_CONVERT) {
+                    if (ch.code == item[0]) {
+                        ch = item[1].toChar()
+                    }
+                }
+            }
+            inputConnection.commitText(ch.toString(), 1)
+            return
+        }
+        if (out.commit.isNotEmpty()) {
+            inputConnection.commitText(out.commit, 1)
+        }
+        inputConnection.setComposingText(out.preedit, 1)
     }
 
     private fun directInput(
