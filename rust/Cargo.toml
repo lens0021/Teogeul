@@ -15,9 +15,9 @@ name = "uniffi-bindgen"
 path = "src/bin/uniffi-bindgen.rs"
 
 [dependencies]
-# geulbus-core 0.3 출시 전까지 두벌식/D·E·F 지원 브랜치를 핀으로 참조한다.
-# https://github.com/chaotic-ground/geulbus/pull/3
-geulbus-core = { git = "https://github.com/chaotic-ground/geulbus.git", rev = "3d4db10970edee45c3fcc66c46b84f74e663e6cd" }
+# geulbus-core 0.3 출시 전까지 main 을 rev 로 핀 고정 참조한다.
+# 두벌식/D·E·F 지원 머지: https://github.com/chaotic-ground/geulbus/pull/3
+geulbus-core = { git = "https://github.com/chaotic-ground/geulbus.git", rev = "544af55e5509a1120c495e68dffcf1c0770f5b90" }
 hanmo = "0.1"
 thiserror = "2"
 uniffi = { version = "0.32", features = ["cli"] }

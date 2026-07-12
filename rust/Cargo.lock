@@ -217,7 +217,7 @@ dependencies = [
 [[package]]
 name = "geulbus-core"
 version = "0.2.0"
-source = "git+https://github.com/chaotic-ground/geulbus.git?rev=3d4db10970edee45c3fcc66c46b84f74e663e6cd#3d4db10970edee45c3fcc66c46b84f74e663e6cd"
+source = "git+https://github.com/chaotic-ground/geulbus.git?rev=544af55e5509a1120c495e68dffcf1c0770f5b90#544af55e5509a1120c495e68dffcf1c0770f5b90"
 dependencies = [
  "hanmo",
  "quick-xml",
