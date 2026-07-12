@@ -38,10 +38,11 @@ pub struct KeyOutcome {
     pub delete_before: u32,
 }
 
+// 주의: 필드명 message 는 생성된 Kotlin 예외의 Throwable.message 와 충돌한다.
 #[derive(Debug, thiserror::Error, uniffi::Error)]
 pub enum EngineError {
-    #[error("자판 변환 실패: {message}")]
-    BadLayout { message: String },
+    #[error("자판 변환 실패: {reason}")]
+    BadLayout { reason: String },
 }
 
 /// geulbus-core 기반 한글 조합 엔진.
@@ -70,7 +71,7 @@ impl GeulbusEngine {
         combos: Vec<ComboRow>,
     ) -> Result<Arc<Self>, EngineError> {
         let layout = layout::build_plain(&name, &rows, &combos)
-            .map_err(|message| EngineError::BadLayout { message })?;
+            .map_err(|reason| EngineError::BadLayout { reason })?;
         Ok(Arc::new(Self {
             inner: Mutex::new(geulbus_core::Engine::new(layout)),
         }))

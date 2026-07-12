@@ -68,8 +68,8 @@ android {
 
     sourceSets {
         getByName("main") {
-            // Rust(geulbus-core) 조합 엔진: cargoBuild 산출 .so 와 UniFFI 생성 바인딩.
-            jniLibs.srcDir(layout.buildDirectory.dir("rustJniLibs/android"))
+            // UniFFI 생성 Kotlin 바인딩. Rust .so 는 rust-android-gradle 이
+            // rustJniLibs 를 jniLibs 에 직접 등록하므로 여기서 다루지 않는다.
             kotlin.srcDir(layout.buildDirectory.dir("generated/uniffi/kotlin"))
         }
     }
