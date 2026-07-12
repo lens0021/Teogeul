@@ -76,17 +76,24 @@ teogeul은 0.3 출시 전까지 git 의존으로 참조한다.
 
 ## 이행 단계
 
-**1단계 (완료)**: 단일 자모 테이블 자판을 geulbus 엔진으로.
+**1단계 (완료, [teogeul#106](https://github.com/chaotic-ground/teogeul/pull/106))**:
+단일 자모 테이블 자판을 geulbus 엔진으로.
 `EngineMode.useGeulbus` = 세벌식 390/391/단모음/순2014, 두벌식 표준/NK.
 `KeyEventHandler` 가 `press`/`backspace` 의 `KeyOutcome` 을 InputConnection 에
 반영하고, 나머지 모드는 기존 `HangulEngine` 경로를 그대로 쓴다.
 
-**2단계 (geulbus-core 확장 대기)**: jamoSet 6개 모드(위 참고),
-안마태(모아치기 = 오토마타 경로 필요), 네벌식 1969(0x02 플래그 의미 분석 필요).
+**2단계 ([teogeul#107](https://github.com/chaotic-ground/teogeul/issues/107),
+[geulbus#4](https://github.com/chaotic-ground/geulbus/issues/4) 확장 대기)**:
+jamoSet 6개 모드(위 참고), 안마태(모아치기 = 오토마타 경로 필요),
+네벌식 1969(0x02 플래그 의미 분석 필요).
 
-**3단계 (2단계 후)**: `HangulEngine`/`HangulJamo` 제거, 모아치기 시간 설정
+**3단계 ([teogeul#108](https://github.com/chaotic-ground/teogeul/issues/108),
+2단계 후, major)**: `HangulEngine`/`HangulJamo` 제거, 모아치기 시간 설정
 (`hardware_use_moachigi`, `hardware_full_moachigi`, `hardware_full_moachigi_delay`)
-과 타임아웃 기제 제거 (major). geulbus의 순서 무관 조합이 대체한다.
+과 타임아웃 기제 제거. geulbus의 순서 무관 조합이 대체한다.
+
+geulbus-core 0.3.0 출시(git rev 핀 → 크레이트 참조 전환)는
+[geulbus#12](https://github.com/chaotic-ground/geulbus/issues/12) 참고.
 
 영문 대체배열(드보락/콜맥) 변환(`LayoutConverter`)은 엔진과 무관하므로 유지.
 
