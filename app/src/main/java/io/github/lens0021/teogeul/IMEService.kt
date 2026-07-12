@@ -13,13 +13,13 @@ import io.github.lens0021.teogeul.config.SettingsRepository
 import io.github.lens0021.teogeul.config.SettingsSnapshot
 import io.github.lens0021.teogeul.config.SettingsValues
 import io.github.lens0021.teogeul.config.settingsDataStore
+import io.github.lens0021.teogeul.engine.GeulbusEngine
 import io.github.lens0021.teogeul.input.CommitComposingTextEvent
 import io.github.lens0021.teogeul.input.InputEventBus
 import io.github.lens0021.teogeul.input.InputKeyEvent
 import io.github.lens0021.teogeul.input.InputTimeoutEvent
 import io.github.lens0021.teogeul.input.KeyEventHandler
 import io.github.lens0021.teogeul.input.KeyUpEvent
-import io.github.lens0021.teogeul.engine.GeulbusEngine
 import io.github.lens0021.teogeul.input.LayoutConverter
 import io.github.lens0021.teogeul.korean.EngineMode
 import io.github.lens0021.teogeul.korean.GeulbusHangul

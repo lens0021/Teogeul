@@ -125,6 +125,12 @@ tasks.matching { it.name.matches(Regex("merge.*JniLibFolders")) }.configureEach 
     dependsOn(tasks.named("cargoBuild"))
 }
 
+// rust-android-gradle 의 cargo 태스크는 실행 시점에 프로젝트 확장을 조회해
+// 구성 캐시와 호환되지 않는다. 해당 태스크가 스케줄될 때만 캐시를 끈다.
+tasks.matching { it.name.startsWith("cargoBuild") }.configureEach {
+    notCompatibleWithConfigurationCache("rust-android-gradle 이 구성 캐시를 지원하지 않음")
+}
+
 // Robolectric(JVM) 테스트가 호스트 cdylib 를 로드할 수 있게 한다.
 tasks.withType<Test>().configureEach {
     dependsOn(cargoHostBuild)
